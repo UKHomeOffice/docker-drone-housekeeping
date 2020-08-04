@@ -7,8 +7,8 @@ log() {
   (2>/dev/null echo -e "$@")
 }
 
-debug()   { if [[ $VERBOSITY > 1 ]]; then log "--- $*"; fi }
-info()    { log "--- $*"; }
+debug()   { if [[ $VERBOSITY -gt 1 ]]; then log "[debug] $*"; fi }
+info()    { if [[ $VERBOSITY -gt 0 ]]; then log "[info] $*"; fi }
 warning() { log "[warning] $*"; }
 error()   { log "[error] $*"; }
 failed()  { log "[failed] $*"; exit 1; }
@@ -44,7 +44,7 @@ for user in $(drone user ls --format "{{ .Login }},{{ .Active }},{{ .Admin }},{{
   debug admin: $admin
   debug last_login: $last_login
 
-  if [[ $last_login < $back_then ]]; then
+  if [[ $last_login -lt $back_then ]]; then
     if [[ $REMOVE_USERS_SKIP_ADMIN == true && $admin == true ]]; then
       info "Skipping admin $login who has not logged on since $(date -d @${last_login})"
     elif [[ $REMOVE_USERS_SKIP_INACTIVE == true && $active == false ]]; then

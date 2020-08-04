@@ -11,4 +11,8 @@ COPY scripts /scripts
 
 RUN chmod +x /scripts/drone-housekeeping.sh
 
+WORKDIR /scripts
+
+USER 1000
+
 CMD "/scripts/drone-housekeeping.sh"
