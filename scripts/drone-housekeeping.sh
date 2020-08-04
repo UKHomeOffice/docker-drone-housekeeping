@@ -16,6 +16,7 @@ failed()  { log "[failed] $*"; exit 1; }
 export VERBOSITY=${VERBOSITY:-1}
 export REMOVE_USERS_SKIP_ADMIN=${REMOVE_USERS_SKIP_ADMIN:-true}
 export REMOVE_USERS_SKIP_INACTIVE=${REMOVE_USERS_SKIP_INACTIVE:-false}
+export REMOVE_USERS_SKIP_USERS=${REMOVE_USERS_SKIP_USERS:-admin}
 export REMOVE_USERS_PERIOD=${REMOVE_USERS_PERIOD:-90}
 export DRY_RUN=${DRY_RUN:-false}
 
@@ -28,6 +29,7 @@ debug back_then is $back_then
 info VERBOSITY: $VERBOSITY
 info REMOVE_USERS_SKIP_ADMIN: $REMOVE_USERS_SKIP_ADMIN
 info REMOVE_USERS_SKIP_INACTIVE: $REMOVE_USERS_SKIP_INACTIVE
+info REMOVE_USERS_SKIP_USERS: $REMOVE_USERS_SKIP_USERS
 info REMOVE_USERS_PERIOD: $REMOVE_USERS_PERIOD
 info DRY_RUN: $DRY_RUN
 
@@ -49,14 +51,23 @@ for user in $(drone user ls --format "{{ .Login }},{{ .Active }},{{ .Admin }},{{
       info "Skipping admin $login who has not logged on since $(date -d @${last_login})"
     elif [[ $REMOVE_USERS_SKIP_INACTIVE == true && $active == false ]]; then
       info "Skipping user $login who has not logged on since $(date -d @${last_login}) as blocked"
-    elif [[ $last_login == 0 ]]; then
-      warning "User $login does not have a last login date; skipping"
     else
-      info "Removing user $login as not logged in since $(date -d @${last_login})"
-      if [[ $DRY_RUN == true ]]; then
-        info [dry-run] drone user rm $login
+      skip=false
+      for skipped_user in $REMOVE_USERS_SKIP_USERS; do
+        if [[ $login == $skipped_user ]]; then
+          skip=true
+          break
+        fi
+      done
+      if [[ $skip == true ]]; then
+        info "Skipping user $login as on exceptions list"
       else
-        drone user rm $login
+        info "Removing user $login as not logged in since $(date -d @${last_login})"
+        if [[ $DRY_RUN == true ]]; then
+          info [dry-run] drone user rm $login
+        else
+          drone user rm $login
+        fi
       fi
     fi
   fi
