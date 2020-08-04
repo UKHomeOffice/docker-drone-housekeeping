@@ -11,3 +11,4 @@ The behaviour of the sript can be modified with the following parameters:
 | REMOVE_USERS_SKIP_INACTIVE | When looking for users to deactivate who have not logged on for a while, skip inactive users | Optional | false |
 | REMOVE_USERS_PERIOD | The period users must have not logged on for in order to be deactivated (in days) | Optional | 90 |
 | DRY_RUN | Specifies to do a dry run without actually removing users | Optional | false |
+| VERBOSITY | How verbose the output should be (0 == warnings, errors; 1 == info; 2 == debug) | Optional | 1 |
