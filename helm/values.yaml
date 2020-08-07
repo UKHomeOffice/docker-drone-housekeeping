@@ -1,0 +1,22 @@
+schedule: "@daily"
+image:
+  name: quay.io/ukhomeofficedigital/drone-housekeeping
+  version: v1.1@sha256:71f3a2086eeed51a5bd642ba2b0532943399c652c2edeb49579e21c900c1ae6d
+extraEnv:
+  - name: REMOVE_USERS_SKIP_USERS
+    value: "admin housekeeper"
+  # - name: REMOVE_USERS_SKIP_ADMIN
+  #   value: true
+  # - name: REMOVE_USERS_SKIP_INACTIVE
+  #   value: false
+  # - name: REMOVE_USERS_PERIOD
+  #   value: 90
+  # - name: DRY_RUN
+  #   value: false
+resources:
+  limits:
+    cpu: "1"
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 128Mi

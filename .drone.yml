@@ -7,6 +7,17 @@ matrix:
     - ukhomeofficedigital+drone_housekeeping
   DOCKER_HOST:
     - tcp://172.17.0.1:2375
+  HELM_REPO:
+    - ukhomeofficedigital/helm-drone-housekeeping
+  HELM_REGISTRY:
+    - quay.io
+  HELM_USERNAME:
+    - ukhomeofficedigital+helm_drone_housekeeping
+
+#############################
+# Docker image pipeline steps
+#############################
+
 pipeline:
   docker-build:
     image: docker:19.03.12
@@ -26,10 +37,11 @@ pipeline:
       - docker_password
     commands:
       - docker login -u="${DOCKER_USERNAME}" -p=$${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
-      - docker tag ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_COMMIT_SHA} ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_TAG}
+      - docker tag ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_COMMIT_SHA} ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_TAG##docker-}
       - docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_COMMIT_SHA}
-      - docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_TAG}
+      - docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_TAG##docker-}
     when:
+      tag: docker-*
       event: tag
 
   docker-latest:
@@ -46,3 +58,26 @@ pipeline:
     when:
       event: push
       branch: master
+
+###########################
+# Helm chart pipeline steps
+###########################
+
+  helm_lint:
+    image: quay.io/ukhomeofficedigital/helm:v3.2.4
+    commands:
+      - cd helm
+      - helm lint
+    when:
+      event: [push, pull_request]
+
+  helm_publish:
+    image: quay.io/ukhomeofficedigital/helm:v3.2.4
+    secrets:
+      - helm_password
+    commands:
+      - export HELM_TAG=$${DRONE_TAG##helm-}
+      - publish-chart.sh
+    when:
+      tag: helm-*
+      event: tag
