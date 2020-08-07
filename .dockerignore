@@ -1,2 +1,3 @@
 /helm/
 /publish-chart.sh
+/publish-image.sh

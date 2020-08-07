@@ -14,10 +14,6 @@ matrix:
   HELM_USERNAME:
     - ukhomeofficedigital+helm_drone_housekeeping
 
-#############################
-# Docker image pipeline steps
-#############################
-
 pipeline:
   docker-build:
     image: docker:19.03.12
@@ -29,19 +25,16 @@ pipeline:
         - push
         - tag
 
-  docker-tag:
+  docker-publish:
     image: docker:19.03.12
     environment:
       docker_username: $DOCKER_USERNAME
     secrets:
       - docker_password
     commands:
-      - docker login -u="${DOCKER_USERNAME}" -p=$${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
-      - docker tag ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_COMMIT_SHA} ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_TAG##docker-}
-      - docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_COMMIT_SHA}
-      - docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}:$${DRONE_TAG##docker-}
+      - apk add --no-cache bash
+      - ./publish-image.sh
     when:
-      tag: docker-*
       event: tag
 
   docker-latest:
@@ -59,10 +52,6 @@ pipeline:
       event: push
       branch: master
 
-###########################
-# Helm chart pipeline steps
-###########################
-
   helm_lint:
     image: quay.io/ukhomeofficedigital/helm:v3.2.4
     commands:
@@ -73,11 +62,11 @@ pipeline:
 
   helm_publish:
     image: quay.io/ukhomeofficedigital/helm:v3.2.4
+    environment:
+      helm_username: $HELM_USERNAME
     secrets:
       - helm_password
     commands:
-      - export HELM_TAG=$${DRONE_TAG##helm-}
-      - publish-chart.sh
+      - ./publish-chart.sh
     when:
-      tag: helm-*
       event: tag

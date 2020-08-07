@@ -3,6 +3,17 @@
 set -o errexit
 set -o nounset
 
+if [[ $DRONE_TAG =~ ^docker\- ]]; then
+  echo "tag aimed at publishing helm chart; skipping docker image"
+  exit 0
+elif [[ $DRONE_TAG =~ ^helm\- ]]; then
+  export HELM_TAG=${DRONE_TAG##helm-}
+  echo helm tag is ${HELM_TAG}
+else
+  echo "only tags starting with 'docker-' or 'helm-' are supported; nothing published"
+  exit 1
+fi
+
 cd helm
 
 CHART_VERSION=$(yq r Chart.yaml version)
