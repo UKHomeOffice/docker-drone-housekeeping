@@ -2,5 +2,5 @@ apiVersion: v2
 name: drone-housekeeping
 description: deployment of a Drone housekeeping job on the ACP platform
 type: application
-version: 1.0
-appVersion: 1.1
+version: 1.0.0
+appVersion: 1.1.0
